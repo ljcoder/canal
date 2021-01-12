@@ -1,16 +1,6 @@
 package com.alibaba.otter.canal.adapter.launcher.loader;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.alibaba.otter.canal.adapter.launcher.common.DataFilter;
 import com.alibaba.otter.canal.adapter.launcher.common.SyncSwitch;
 import com.alibaba.otter.canal.adapter.launcher.config.SpringContext;
 import com.alibaba.otter.canal.client.adapter.OuterAdapter;
@@ -22,6 +12,16 @@ import com.alibaba.otter.canal.connector.core.config.CanalConstants;
 import com.alibaba.otter.canal.connector.core.consumer.CommonMessage;
 import com.alibaba.otter.canal.connector.core.spi.CanalMsgConsumer;
 import com.alibaba.otter.canal.connector.core.spi.ExtensionLoader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 
 /**
  * 适配处理器
@@ -49,6 +49,8 @@ public class AdapterProcessor {
         .error("parse events has an error", e);
 
     private SyncSwitch                      syncSwitch;
+
+    private DataFilter dataFilter = (DataFilter) SpringContext.getBean(DataFilter.class);
 
     public AdapterProcessor(CanalClientConfig canalClientConfig, String destination, String groupId,
                             List<List<OuterAdapter>> canalOuterAdapters){
@@ -204,6 +206,9 @@ public class AdapterProcessor {
                             long begin = System.currentTimeMillis();
                             List<CommonMessage> commonMessages = canalMsgConsumer
                                 .getMessage(this.canalClientConfig.getTimeout(), TimeUnit.MILLISECONDS);
+                            if(!CollectionUtils.isEmpty(commonMessages)) {
+                                commonMessages = this.dataFilter.filter(commonMessages);
+                            }
                             writeOut(commonMessages);
                             canalMsgConsumer.ack();
                             if (logger.isDebugEnabled()) {
@@ -218,6 +223,7 @@ public class AdapterProcessor {
                             } else {
                                 canalMsgConsumer.ack();
                                 logger.error(e.getMessage() + " Error sync but ACK!");
+                                logger.error("", e);
                             }
                             Thread.sleep(500);
                         }
