@@ -19,6 +19,7 @@ import javax.script.ScriptException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 @Component
 public class DataFilter {
@@ -75,7 +76,7 @@ public class DataFilter {
                     if(scriptFile.getName().endsWith(".js")){
                         try {
                             fileReaders.add(new FileReader(scriptFile));
-                            logger.info("load javascript [{}] file", scriptFiles);
+                            logger.info("load javascript [{}] file", scriptFile.getAbsolutePath());
                         } catch (FileNotFoundException e) {
                             e.printStackTrace();
                         }
@@ -100,9 +101,15 @@ public class DataFilter {
             if(Objects.nonNull(this.invocable)){
                 try {
                     String sn = UUID.randomUUID().toString().replace("-", "");
+                    if(logger.isDebugEnabled() && !CollectionUtils.isEmpty(messages)){
+                        logger.debug("send data to javascript, data length: {},sn: {}", messages == null ? 0 : messages.size(), sn);
+                    }
                     List<CommonMessage> result = (List<CommonMessage>) this.invocable.invokeFunction("main", new Object[]{
                             messages, sn
                     });
+                    if(logger.isDebugEnabled()){
+                        logger.debug("receive data from javascript, data length: {},sn: {}", messages == null ? 0 : messages.size(), sn);
+                    }
                     return result;
                 } catch (ScriptException e) {
                     e.printStackTrace();
