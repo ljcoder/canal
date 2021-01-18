@@ -6,7 +6,7 @@ spring:
     time-zone: GMT+8
     default-property-inclusion: non_null
 filter.enable: true
-filter.scrpit: /Users/liguowang/workspace/utils/canal.adapter/conf/script
+filter.script: /Users/liguowang/workspace/utils/canal.adapter/conf/script
 canal.conf:
   mode: kafka #tcp kafka rocketMQ rabbitMQ
   flatMessage: true
