@@ -46,10 +46,12 @@ public class FilterScriptMonitor {
 
     @PreDestroy
     public void destroy() {
-        try {
-            fileMonitor.stop();
-        } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+        if(this.filterConfig.getFilterEnable()) {
+            try {
+                fileMonitor.stop();
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+            }
         }
     }
 
